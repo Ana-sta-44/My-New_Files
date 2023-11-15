@@ -1,0 +1,122 @@
+#include "main.h"
+
+
+/**
+ *command_in_current_path - Functions to check command is in current path
+ *@command: command to be view
+ *
+ *Return: duplicate if present else NULL
+ */
+
+char  *command_in_current_path(char *command)
+{
+	if (access(command, F_OK) == 0)
+	{
+		return (_strdup(command));
+	}
+	else
+		return (NULL);
+}
+
+
+/**
+ *get_path - Command to get the environment variable PATH
+ *@void: no argument expected
+ *
+ *Return: path if successful else null
+ */
+char *get_path(void)
+{
+	char *path;
+
+	path = getenv("PATH");
+	if (path == NULL)
+	{
+		_fprintf(stderr, "Trying to access PATH, but unable to get PATH environment variable.\n");
+		return (NULL);
+	}
+
+	return (path);
+}
+
+
+
+/**
+ * The_full_space - commands to allocate space for full path
+ *@path_copy: buffer to be freed if space allocation fails
+ *
+ *Return: allocate space else Null
+ */
+
+char *The_full_space(char *path_copy)
+{
+	char *full_path;
+
+	full_path = (char *)malloc(MAX_PATH_LENGTH);
+	if (full_path == NULL)
+	{
+		perror("Memory allocation failed");
+		free(path_copy);
+		return (NULL);
+	}
+
+	return (full_path);
+}
+
+
+/**
+ *get_pathname - The function to get pathname
+ *@command: (command) to be executed
+ *@count: The number of processes attempted execution per session
+ *
+ *Return:  pathname if successful else null
+ */
+
+
+/* Function to get the full pathname of a command*/
+char *get_pathname(char *command, int count)
+{
+	char *path;
+	char *path_copy;
+	char *token;
+	char *full_path, *n_command;
+
+	path = command_in_current_path(command);
+	if (path != NULL)
+	{
+		return (path);
+	}
+	path = getpath();
+	if (path == NULL)
+	{
+		printf("path is NULL");
+	}
+	n_command = remove_prefix(command);
+	path_copy = _strdup(path);
+	if (path_copy == NULL)
+	{
+		perror("Fail to duplicate path");
+		return (NULL);
+	}
+	token = strtok(path_copy, ":");
+	full_path = full_path_space(path_copy);
+	while (token != NULL)
+	{
+		_snprintf(full_path, MAX_PATH_LENGTH, "%s/%s", token, n_command);
+		if (access(full_path, X_OK) == 0)
+		{
+			if (n_command)
+				free(n_command);
+			free(path_copy);
+			return (full_path);
+		}
+		token = strtok(NULL, ":");
+	}
+	if (n_command)
+		free(n_command);
+	free(full_path);
+	free(path_copy);
+	/* Command not found, print error and exit*/
+	_fprintf(stderr, "./hsh: %d: %s: not found\n", count, command);
+	return (NULL);
+}
